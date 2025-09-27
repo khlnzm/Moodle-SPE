@@ -1,0 +1,16 @@
+<?php
+// mod/spe/lang/en/spe.php
+defined('MOODLE_INTERNAL') || die();
+
+$string['pluginname'] = 'Self & Peer Evaluation';
+$string['modulename'] = 'Self & Peer Evaluation';
+$string['modulenameplural'] = 'Self & Peer Evaluations';
+
+// Shown in the activity chooser card (Moodle 4.x)
+$string['pluginname_help'] = 'Collect self & peer ratings and comments for group projects. Includes sentiment analysis.';
+
+// Capability names you’ll add later (placeholders are fine now)
+$string['spe:addinstance'] = 'Add a new Self & Peer Evaluation activity';
+$string['spe:view'] = 'View SPE activity';
+$string['spe:submit'] = 'Submit self & peer evaluations';
+$string['spe:viewreports'] = 'View SPE reports';
