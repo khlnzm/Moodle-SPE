@@ -1,23 +1,47 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/spe/db" VERSION="2025092200" COMMENT="SPE tables"
+<XMLDB PATH="mod/spe/db" VERSION="2025092800" COMMENT="SPE tables"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
   <TABLES>
-    <!-- Main instance table for the activity -->
-    <TABLE NAME="spe" COMMENT="SPE activity settings">
+
+    <!-- Existing main activity table (keep yours as-is) -->
+    <TABLE NAME="spe" COMMENT="SPE activity instances">
       <FIELDS>
-        <FIELD NAME="id"            TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-        <FIELD NAME="course"        TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="name"          TYPE="char" LENGTH="255" NOTNULL="true"/>
-        <FIELD NAME="intro"         TYPE="text" NOTNULL="false"/>
-        <FIELD NAME="introformat"   TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1"/>
-        <FIELD NAME="timecreated"   TYPE="int" LENGTH="10" NOTNULL="true"/>
-        <FIELD NAME="timemodified"  TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="intro" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="introformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="coursefk" TYPE="foreign" FIELDS="course" REFTABLE="course" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+
+    <!-- NEW: team mapping per activity instance -->
+    <TABLE NAME="spe_teammap" COMMENT="Maps students to teams for an SPE instance">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="speid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="teamname" TYPE="char" LENGTH="100" NOTNULL="true"/>
+        <FIELD NAME="rawidnumber" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="rawusername" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="rawemail" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="spefk" TYPE="foreign" FIELDS="speid" REFTABLE="spe" REFFIELDS="id"/>
+        <KEY NAME="userfk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="spe_user_unique" UNIQUE="true" FIELDS="speid,userid"/>
+      </INDEXES>
+    </TABLE>
+
   </TABLES>
 </XMLDB>
