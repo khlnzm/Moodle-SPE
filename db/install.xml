@@ -4,6 +4,26 @@
        xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
   <TABLES>
 
+    <TABLE NAME="spe_sentiment" COMMENT="Queue + results for sentiment analysis">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="speid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="raterid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="rateeid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- peer_comment|reflection -->
+        <FIELD NAME="text" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="sentiment" TYPE="number" LENGTH="10,4" NOTNULL="false"/> <!-- -1..1 or 0..1 -->
+        <FIELD NAME="label" TYPE="char" LENGTH="20" NOTNULL="false"/> <!-- negative|neutral|positive -->
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- pending|done|error -->
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+
     <!-- Existing main activity table (keep yours as-is) -->
     <TABLE NAME="spe" COMMENT="SPE activity instances">
       <FIELDS>
