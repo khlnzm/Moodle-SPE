@@ -5,8 +5,12 @@
 // - Validates reflection (>=100 words)
 // - Detects mismatches between numeric scores and comment sentiment
 // - Saves to spe_submission / spe_rating
+<<<<<<< HEAD
 // - Queues text to spe_sentiment and immediately calls FastAPI
 // - Shows a pop-out modal with text sentiment + points + combined final
+=======
+// - Optionally queues text to spe_sentiment (if table exists) for later NLP
+>>>>>>> origin/main
 // ============================================================================
 
 require('../../config.php');
@@ -34,22 +38,44 @@ echo $OUTPUT->heading('Self and Peer Evaluation');
 // ---------------------------------------------------------------------
 
 /**
+<<<<<<< HEAD
  * Quick heuristic sentiment for consistency-warning gate only.
  * Returns an integer: >0 positive, <0 negative, 0 neutral.
+=======
+ * Quick heuristic sentiment (offline, immediate).
+ * Returns an integer: >0 positive, <0 negative, 0 neutral.
+ * This is used ONLY for the "consistency" warning gate.
+ * You'll likely replace/augment with a real NLP later.
+>>>>>>> origin/main
  */
 function spe_quick_sentiment(string $text): int {
     $text = core_text::strtolower($text);
 
+<<<<<<< HEAD
+=======
+    // Simple word lists (tune anytime).
+>>>>>>> origin/main
     $pos = ['good','great','excellent','helpful','reliable','on time','timely','positive','clear','creative','well done','organised','responsible','supportive'];
     $neg = ['poor','bad','late','lazy','unresponsive','rude','toxic','negative','problem','issue','did not','lacking','absent','missing','unprofessional','conflict'];
 
     $p = 0; $n = 0;
+<<<<<<< HEAD
     foreach ($pos as $w) { if (strpos($text, $w) !== false) { $p++; } }
     foreach ($neg as $w) { if (strpos($text, $w) !== false) { $n++; } }
     return $p - $n;
 }
 
 /** Unicode-safe word count (for min-words check). */
+=======
+    foreach ($pos as $w) { if (strpos($text, $w) !== false) $p++; }
+    foreach ($neg as $w) { if (strpos($text, $w) !== false) $n++; }
+    return $p - $n;
+}
+
+/**
+ * Unicode-safe word count (for Reflection min-words check).
+ */
+>>>>>>> origin/main
 function spe_wordcount(string $text): int {
     if (preg_match_all("/[\\p{L}\\p{N}’']+/u", $text, $m)) {
         return count($m[0]);
@@ -57,6 +83,7 @@ function spe_wordcount(string $text): int {
     return 0;
 }
 
+<<<<<<< HEAD
 // ---- Numeric-score thresholds/weights (you can tweak) ----
 const SPE_SCORE_NEG_MAX = 13; // <=13 => negative
 const SPE_SCORE_POS_MIN = 16; // >=16 => positive
@@ -112,6 +139,10 @@ function spe_combined_polarity(float $textPol, ?float $pointsPol): float {
 
 // ---------------------------------------------------------------------
 // 3) Static instructions & criteria
+=======
+// ---------------------------------------------------------------------
+// 3) Static instructions & criteria (from your SPE1 document)
+>>>>>>> origin/main
 // ---------------------------------------------------------------------
 echo html_writer::tag('div', '
     <p><strong>Please note:</strong> Everything that you put into this form will be kept strictly confidential by the unit coordinator.</p>
@@ -135,6 +166,10 @@ $criteria = [
 
 // ---------------------------------------------------------------------
 // 4) Resolve the student's peers using Moodle Groups
+<<<<<<< HEAD
+=======
+//    (No custom CSV needed—uses course groups as teams.)
+>>>>>>> origin/main
 // ---------------------------------------------------------------------
 global $USER, $DB;
 
@@ -144,9 +179,13 @@ if (!empty($usergroups[0])) {
     $mygroupid = reset($usergroups[0]);
     $members = groups_get_members($mygroupid, 'u.id, u.firstname, u.lastname, u.username');
     foreach ($members as $u) {
+<<<<<<< HEAD
         if ((int)$u->id !== (int)$USER->id) {
             $peers[] = $u; // exclude self
         }
+=======
+        if ((int)$u->id !== (int)$USER->id) { $peers[] = $u; } // exclude self
+>>>>>>> origin/main
     }
 } else {
     echo $OUTPUT->notification('You are not in any group yet. Please ask your instructor to add you to a group.', 'notifyproblem');
@@ -158,7 +197,11 @@ if (!empty($usergroups[0])) {
 $submitted          = optional_param('submitted', 0, PARAM_INT);
 $confirmconsistency = optional_param('confirmconsistency', 0, PARAM_INT);
 
+<<<<<<< HEAD
 // Prefill vars if validation fails.
+=======
+// These vars will be used to prefill the form if validation fails.
+>>>>>>> origin/main
 $prefill = [
     'selfdesc'   => '',
     'reflection' => '',
@@ -169,7 +212,11 @@ $prefill = [
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
 
+<<<<<<< HEAD
     // ---- 5.1 Collect inputs once ----
+=======
+    // ---- 5.1 Collect inputs once (to reuse in checks + saving) ----
+>>>>>>> origin/main
     $selfdesc   = trim(optional_param('selfdesc', '', PARAM_RAW));
     $reflection = trim(optional_param('reflection', '', PARAM_RAW));
 
@@ -196,27 +243,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
         'peertexts'  => $peertexts
     ];
 
+<<<<<<< HEAD
     // ---- 5.2 Validation: Reflection min 100 words ----
     $errors   = [];
+=======
+    // ---- 5.2 Validation: Reflection min 100 words (server-side) ----
+    $errors = [];
+>>>>>>> origin/main
     $refwords = spe_wordcount($reflection);
     if ($refwords < 100) {
         $errors[] = "Reflection must be at least 100 words (currently $refwords).";
     }
 
+<<<<<<< HEAD
     if (!empty($errors)) {
+=======
+    // (Optional) You can also enforce that ALL selects are chosen:
+    // foreach ($criteria as $key => $label) {
+    //     if (empty($selfscores[$key])) { $errors[] = "Select a self score for: $label"; }
+    // }
+    // foreach ($peers as $p) {
+    //     foreach ($criteria as $key => $label) {
+    //         if (empty($peerscores[$p->id][$key])) {
+    //             $errors[] = "Select a score for ".fullname($p)." on: $label";
+    //         }
+    //     }
+    // }
+
+    if (!empty($errors)) {
+        // Show errors and render the form again (no DB writes).
+>>>>>>> origin/main
         foreach ($errors as $e) {
             echo $OUTPUT->notification($e, 'notifyproblem');
         }
         $submitted = 0; // force form to render
     } else {
+<<<<<<< HEAD
         // ---- 5.3 Consistency detection ----
         $HIGH = 4.0;
         $LOW  = 2.5;
+=======
+        // ---- 5.3 Consistency detection: compare averages vs sentiment ----
+        $HIGH = 4.0;  // avg >= 4 = high
+        $LOW  = 2.5;  // avg <= 2.5 = low
+>>>>>>> origin/main
         $mismatches = [];
 
         $avg = function(array $arr): float {
             $vals = array_filter($arr, fn($v) => is_numeric($v) && $v > 0);
+<<<<<<< HEAD
             return count($vals) ? array_sum($vals) / count($vals) : 0.0;
+=======
+            return count($vals) ? array_sum($vals)/count($vals) : 0.0;
+>>>>>>> origin/main
         };
 
         $selfavg  = $avg($selfscores);
@@ -239,6 +318,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
             }
         }
 
+<<<<<<< HEAD
+=======
+        // If mismatches exist and not yet confirmed: show a blocking warning.
+>>>>>>> origin/main
         if (!empty($mismatches) && !$confirmconsistency) {
             echo $OUTPUT->notification('Potential inconsistencies detected. Please review your scores or comments:', 'notifyproblem');
             echo html_writer::start_tag('ul');
@@ -253,6 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
                 'action' => new moodle_url('/mod/spe/view.php', ['id' => $cm->id]),
                 'style'  => 'margin-top:12px'
             ]);
+<<<<<<< HEAD
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submitted', 'value' => 1]);
             echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'confirmconsistency', 'value' => 1]);
@@ -279,6 +363,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
 
         // ---- 5.4 Save (valid + either consistent or user confirmed) ----
         $sub = $DB->get_record('spe_submission', ['speid' => $cm->instance, 'userid' => $USER->id]);
+=======
+            echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'sesskey','value'=>sesskey()]);
+            echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'submitted','value'=>1]);
+            echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'confirmconsistency','value'=>1]);
+
+            echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'selfdesc','value'=>$selfdesc]);
+            echo html_writer::tag('textarea', $reflection, ['name'=>'reflection','style'=>'display:none']);
+
+            foreach ($criteria as $key => $label) {
+                echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>"self_{$key}", 'value'=>$selfscores[$key]]);
+            }
+            foreach ($peers as $p) {
+                echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>"comment_{$p->id}", 'value'=>$peertexts[$p->id]]);
+                foreach ($criteria as $key => $label) {
+                    echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>"peer_{$p->id}_{$key}", 'value'=>$peerscores[$p->id][$key]]);
+                }
+            }
+            echo html_writer::empty_tag('input', ['type'=>'submit','value'=>'Submit anyway (I confirm this is intended)']);
+            echo html_writer::end_tag('form');
+
+            // Option to go back to the form
+            echo html_writer::tag('p', html_writer::link(new moodle_url('/mod/spe/view.php', ['id'=>$cm->id]), 'Go back and edit your answers.'));
+            echo $OUTPUT->footer();
+            exit; // Stop now. Save only happens after confirmation.
+        }
+
+        // ---- 5.4 Save (valid + either consistent or user confirmed) ----
+
+        // Save submission (selfdesc + reflection)
+        $sub = $DB->get_record('spe_submission', ['speid'=>$cm->instance, 'userid'=>$USER->id]);
+>>>>>>> origin/main
         $data = [
             'speid'        => $cm->instance,
             'userid'       => $USER->id,
@@ -296,13 +411,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
         }
 
         // Clear old ratings to make submission idempotent
+<<<<<<< HEAD
         $DB->delete_records('spe_rating', ['speid' => $cm->instance, 'raterid' => $USER->id]);
+=======
+        $DB->delete_records('spe_rating', ['speid'=>$cm->instance, 'raterid'=>$USER->id]);
+>>>>>>> origin/main
 
         // Self scores (store selfdesc as the "comment")
         foreach ($criteria as $key => $label) {
             $score = $selfscores[$key] ?? 0;
             if ($score >= 1 && $score <= 5) {
                 $DB->insert_record('spe_rating', (object)[
+<<<<<<< HEAD
                     'speid'       => $cm->instance,
                     'raterid'     => $USER->id,
                     'rateeid'     => $USER->id,
@@ -310,6 +430,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
                     'score'       => $score,
                     'comment'     => $selfdesc ?: null,
                     'timecreated' => time()
+=======
+                    'speid'      => $cm->instance,
+                    'raterid'    => $USER->id,
+                    'rateeid'    => $USER->id,
+                    'criterion'  => $key,
+                    'score'      => $score,
+                    'comment'    => $selfdesc ?: null,
+                    'timecreated'=> time()
+>>>>>>> origin/main
                 ]);
             }
         }
@@ -321,6 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
                 $score = $peerscores[$p->id][$key] ?? 0;
                 if ($score >= 1 && $score <= 5) {
                     $DB->insert_record('spe_rating', (object)[
+<<<<<<< HEAD
                         'speid'       => $cm->instance,
                         'raterid'     => $USER->id,
                         'rateeid'     => $p->id,
@@ -342,10 +472,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
                     'text'        => $peercomment,
                     'status'      => 'pending',
                     'timecreated' => time()
+=======
+                        'speid'      => $cm->instance,
+                        'raterid'    => $USER->id,
+                        'rateeid'    => $p->id,
+                        'criterion'  => $key,
+                        'score'      => $score,
+                        'comment'    => $peercomment ?: null,
+                        'timecreated'=> time()
+                    ]);
+                }
+            }
+            // Optional: queue peer comment for later NLP if table exists
+            if ($DB->get_manager()->table_exists('spe_sentiment') && $peercomment !== '') {
+                $DB->insert_record('spe_sentiment', (object)[
+                    'speid'      => $cm->instance,
+                    'raterid'    => $USER->id,
+                    'rateeid'    => $p->id,
+                    'type'       => 'peer_comment',
+                    'text'       => $peercomment,
+                    'status'     => 'pending',
+                    'timecreated'=> time()
+>>>>>>> origin/main
                 ]);
             }
         }
 
+<<<<<<< HEAD
         // Queue reflection as well (dedupe pending before reinsert)
         if ($DB->get_manager()->table_exists('spe_sentiment') && $reflection !== '') {
             $DB->delete_records('spe_sentiment', [
@@ -364,6 +517,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && confirm_sesskey()) {
                 'text'        => $reflection,
                 'status'      => 'pending',
                 'timecreated' => time()
+=======
+        // Optional: queue reflection as well
+        if ($DB->get_manager()->table_exists('spe_sentiment') && $reflection !== '') {
+            $DB->insert_record('spe_sentiment', (object)[
+                'speid'      => $cm->instance,
+                'raterid'    => $USER->id,
+                'rateeid'    => $USER->id,
+                'type'       => 'reflection',
+                'text'       => $reflection,
+                'status'     => 'pending',
+                'timecreated'=> time()
+>>>>>>> origin/main
             ]);
         }
 
@@ -380,8 +545,13 @@ if (!$submitted) {
         'method' => 'post',
         'action' => new moodle_url('/mod/spe/view.php', ['id' => $cm->id]),
     ]);
+<<<<<<< HEAD
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'submitted', 'value' => 1]);
+=======
+    echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'sesskey','value'=>sesskey()]);
+    echo html_writer::empty_tag('input', ['type'=>'hidden','name'=>'submitted','value'=>1]);
+>>>>>>> origin/main
 
     // Self Evaluation
     echo html_writer::tag('h3', 'Self Evaluation');
@@ -390,7 +560,11 @@ if (!$submitted) {
         echo html_writer::tag('p', $label);
         echo '<select name="self_' . $key . '" required>';
         echo '<option value="">--</option>';
+<<<<<<< HEAD
         for ($i = 1; $i <= 5; $i++) {
+=======
+        for ($i=1; $i<=5; $i++) {
+>>>>>>> origin/main
             $selected = (isset($sel[$key]) && (int)$sel[$key] === $i) ? ' selected' : '';
             echo "<option value=\"$i\"$selected>$i</option>";
         }
@@ -398,10 +572,17 @@ if (!$submitted) {
     }
 
     echo html_writer::tag('h4', 'Briefly describe how you believe you contributed to the project process:');
+<<<<<<< HEAD
     echo html_writer::tag('textarea', $prefill['selfdesc'] ?? '', ['name' => 'selfdesc', 'rows' => 4, 'cols' => 80]);
 
     echo html_writer::tag('h4', 'Reflection (minimum 100 words)');
     echo html_writer::tag('textarea', $prefill['reflection'] ?? '', ['name' => 'reflection', 'rows' => 6, 'cols' => 80]);
+=======
+    echo html_writer::tag('textarea', $prefill['selfdesc'] ?? '', ['name'=>'selfdesc','rows'=>4,'cols'=>80]);
+
+    echo html_writer::tag('h4', 'Reflection (minimum 100 words)');
+    echo html_writer::tag('textarea', $prefill['reflection'] ?? '', ['name'=>'reflection','rows'=>6,'cols'=>80]);
+>>>>>>> origin/main
 
     // Peer Evaluation
     if (!empty($peers)) {
@@ -416,20 +597,29 @@ if (!$submitted) {
                 echo html_writer::tag('p', $label);
                 echo '<select name="peer_' . $p->id . '_' . $key . '" required>';
                 echo '<option value="">--</option>';
+<<<<<<< HEAD
                 for ($i = 1; $i <= 5; $i++) {
+=======
+                for ($i=1; $i<=5; $i++) {
+>>>>>>> origin/main
                     $selected = (isset($psel[$p->id][$key]) && (int)$psel[$p->id][$key] === $i) ? ' selected' : '';
                     echo "<option value=\"$i\"$selected>$i</option>";
                 }
                 echo '</select><br>';
             }
             echo html_writer::tag('p', 'Briefly describe how you believe this person contributed to the project process:');
+<<<<<<< HEAD
             echo html_writer::tag('textarea', $ptext[$p->id] ?? '', ['name' => "comment_{$p->id}", 'rows' => 4, 'cols' => 80]);
+=======
+            echo html_writer::tag('textarea', $ptext[$p->id] ?? '', ['name'=>"comment_{$p->id}", 'rows'=>4, 'cols'=>80]);
+>>>>>>> origin/main
             echo html_writer::empty_tag('hr');
         }
     } else {
         echo $OUTPUT->notification('No peers found in your group. You can still submit your self-evaluation.', 'notifywarning');
     }
 
+<<<<<<< HEAD
     echo html_writer::empty_tag('input', ['type' => 'submit', 'value' => 'Submit']);
     echo html_writer::end_tag('form');
 }
@@ -634,6 +824,12 @@ document.addEventListener("keydown",function(e){
     }
 }
 
+=======
+    echo html_writer::empty_tag('input', ['type'=>'submit','value'=>'Submit']);
+    echo html_writer::end_tag('form');
+}
+
+>>>>>>> origin/main
 // ---------------------------------------------------------------------
 // 7) Footer
 // ---------------------------------------------------------------------

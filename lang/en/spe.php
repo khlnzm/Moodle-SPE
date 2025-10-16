@@ -14,7 +14,10 @@ $string['spe:addinstance'] = 'Add a new Self & Peer Evaluation activity';
 $string['spe:view'] = 'View SPE activity';
 $string['spe:submit'] = 'Submit self & peer evaluations';
 $string['spe:viewreports'] = 'View SPE reports';
+<<<<<<< HEAD
 
 $string['sentiment_url'] = 'Sentiment API URL';
 $string['sentiment_token'] = 'Sentiment API token';
 
+=======
+>>>>>>> origin/main
