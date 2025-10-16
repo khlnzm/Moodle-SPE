@@ -38,7 +38,6 @@ function xmldb_spe_upgrade($oldversion) {
         $table->add_index('by_pair', XMLDB_INDEX_NOTUNIQUE, ['speid','raterid','rateeid','criterion']);
         if (!$dbman->table_exists($table)) { $dbman->create_table($table); }
 
-<<<<<<< HEAD
         $table = new xmldb_table('spe_submission');
         $field = new xmldb_field('selfdesc', XMLDB_TYPE_TEXT, null, null, null, null, null, 'userid'); // after userid
         if (!$dbman->field_exists($table, $field)) {
@@ -48,9 +47,6 @@ function xmldb_spe_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025100301, 'spe');
 
         
-=======
-        upgrade_mod_savepoint(true, 2025100301, 'spe');
->>>>>>> origin/main
     }
     return true;
 }

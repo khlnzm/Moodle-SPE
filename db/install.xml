@@ -12,12 +12,8 @@
         <FIELD NAME="rateeid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="type" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- peer_comment|reflection -->
         <FIELD NAME="text" TYPE="text" NOTNULL="true"/>
-<<<<<<< HEAD
         <!-- FIX: split 10,4 into LENGTH + DECIMALS -->
         <FIELD NAME="sentiment" TYPE="number" LENGTH="10" DECIMALS="4" NOTNULL="false"/> <!-- -1..1 or 0..1 -->
-=======
-        <FIELD NAME="sentiment" TYPE="number" LENGTH="10,4" NOTNULL="false"/> <!-- -1..1 or 0..1 -->
->>>>>>> origin/main
         <FIELD NAME="label" TYPE="char" LENGTH="20" NOTNULL="false"/> <!-- negative|neutral|positive -->
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- pending|done|error -->
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
@@ -28,10 +24,6 @@
       </KEYS>
     </TABLE>
 
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/main
     <!-- Existing main activity table (keep yours as-is) -->
     <TABLE NAME="spe" COMMENT="SPE activity instances">
       <FIELDS>
@@ -77,10 +69,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="speid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-<<<<<<< HEAD
         <FIELD NAME="selfdesc" TYPE="text" NOTNULL="false"/>
-=======
->>>>>>> origin/main
         <FIELD NAME="reflection" TYPE="text" NOTNULL="false"/>
         <FIELD NAME="wordcount" TYPE="int" LENGTH="10" NOTNULL="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
