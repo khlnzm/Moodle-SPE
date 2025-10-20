@@ -91,10 +91,17 @@ foreach ($peercomments as $rateeid => $commenttext) {
 echo $OUTPUT->notification('Submission approved and items queued for NLP.', 'notifysuccess');
 
 $links = html_writer::alist([
-    html_writer::link(new moodle_url('/mod/spe/analyze_push.php', ['id' => $cm->id]), 'Send queued texts to NLP now'),
-    html_writer::link(new moodle_url('/mod/spe/analysis_report.php', ['id' => $cm->id]), 'View analysis report')
+    html_writer::link(
+        new moodle_url('/mod/spe/analyze_push.php', ['id' => $cm->id, 'sesskey' => sesskey()]),
+        'Send queued texts to NLP now'
+    ),
+    html_writer::link(
+        new moodle_url('/mod/spe/analysis_report.php', ['id' => $cm->id]),
+        'View analysis report'
+    )
 ], [], 'ul');
 echo $links;
+
 
 echo $OUTPUT->continue_button(new moodle_url('/mod/spe/view.php', ['id' => $cm->id]));
 echo $OUTPUT->footer();

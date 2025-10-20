@@ -1,9 +1,11 @@
 <?php
 // mod/spe/pushanalysis.php
 // Send pending spe_sentiment rows to the external FastAPI and store results.
-
+// mod/spe/pushanalysis.php (legacy shim)
 require('../../config.php');
-require_once($CFG->libdir . '/filelib.php'); // Moodle curl helper
+$cmid = required_param('id', PARAM_INT);
+redirect(new moodle_url('/mod/spe/analyze_push.php', ['id' => $cmid, 'sesskey' => sesskey()]));
+
 
 $cmid = required_param('id', PARAM_INT);
 $cm   = get_coursemodule_from_id('spe', $cmid, 0, false, MUST_EXIST);

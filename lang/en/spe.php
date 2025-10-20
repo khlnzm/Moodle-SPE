@@ -5,6 +5,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Self & Peer Evaluation';
 $string['modulename'] = 'Self & Peer Evaluation';
 $string['modulenameplural'] = 'Self & Peer Evaluations';
+$string['pluginadministration']  = 'SPE administration';
 
 // Shown in the activity chooser card (Moodle 4.x)
 $string['pluginname_help'] = 'Collect self & peer ratings and comments for group projects. Includes sentiment analysis.';
@@ -14,6 +15,7 @@ $string['spe:addinstance'] = 'Add a new Self & Peer Evaluation activity';
 $string['spe:view'] = 'View SPE activity';
 $string['spe:submit'] = 'Submit self & peer evaluations';
 $string['spe:viewreports'] = 'View SPE reports';
+$string['spe:manage']      = 'Manage SPE settings';
 
 $string['sentiment_url'] = 'Sentiment API URL';
 $string['sentiment_token'] = 'Sentiment API token';
