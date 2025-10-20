@@ -26,6 +26,17 @@ $PAGE->set_url('/mod/spe/view.php', ['id' => $cm->id]);
 $PAGE->set_title('Self and Peer Evaluation');
 $PAGE->set_heading($course->fullname);
 
+// Add a discrete instructor button in the header (only for teachers/managers)
+if (has_capability('mod/spe:manage', $context)) {
+    $PAGE->set_button(
+        $OUTPUT->single_button(
+            new moodle_url('/mod/spe/instructor.php', ['id' => $cm->id]),
+            get_string('instructordashboard', 'spe'),
+            'get'
+        )
+    );
+}
+
 // Render header
 echo $OUTPUT->header();
 echo $OUTPUT->heading('Self and Peer Evaluation');

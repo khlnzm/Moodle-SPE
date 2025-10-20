@@ -15,6 +15,9 @@ $course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 
+// ---------------------------------------------------------------------------
+// Page setup
+// ---------------------------------------------------------------------------
 $PAGE->set_url('/mod/spe/instructor.php', ['id' => $cm->id]);
 $PAGE->set_title('SPE — Instructor Panel');
 $PAGE->set_heading($course->fullname);
@@ -23,11 +26,33 @@ require_capability('mod/spe:manage', $context);
 require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->libdir.'/pdflib.php');
 
+// Small helper to display a name without triggering fullname() developer notices.
+$mkname = function(string $first = '', string $last = ''): string {
+    return format_string(trim($first . ' ' . $last));
+};
+
 // ============================================================================
 //  1. Handle Approval & Queueing
 // ============================================================================
+
 echo $OUTPUT->header();
 echo $OUTPUT->heading('SPE — Instructor Management');
+
+// Plain-link fallback so the actions are always visible (even if theme hides cards)
+echo html_writer::alist([
+    html_writer::link(
+        new moodle_url('/mod/spe/analyze_push.php', ['id' => $cm->id, 'sesskey' => sesskey()]),
+        'Run analysis now'
+    ),
+    html_writer::link(
+        new moodle_url('/mod/spe/analysis_report.php', ['id' => $cm->id]),
+        'Open Sentiment Analysis Report'
+    ),
+    html_writer::link(
+        new moodle_url('/mod/spe/view.php', ['id' => $cm->id]),
+        'Back to activity'
+    ),
+], ['class' => 'list-unstyled mb-3']);
 
 $approveuserid = optional_param('approveuserid', 0, PARAM_INT);
 if ($approveuserid && confirm_sesskey()) {
@@ -39,7 +64,8 @@ if ($approveuserid && confirm_sesskey()) {
                 'speid' => $cm->instance,
                 'raterid' => $approveuserid,
                 'rateeid' => $approveuserid,
-                'type' => 'reflection'
+                'type' => 'reflection',
+                'text' => $reflection
             ]);
             if (!$exists) {
                 $DB->insert_record('spe_sentiment', (object)[
@@ -62,20 +88,24 @@ if ($approveuserid && confirm_sesskey()) {
     ]);
     foreach ($ratings as $r) {
         $comment = trim((string)$r->comment);
-        if ($comment === '') continue;
-        $exists = $DB->record_exists_select('spe_sentiment',
-            "speid = ? AND raterid = ? AND rateeid = ? AND type = ? AND " .
-            $DB->sql_compare_text('text', 1024) . " = " . $DB->sql_compare_text('?', 1024),
-            [$cm->instance, $approveuserid, $r->rateeid, 'peer_comment', $comment]
-        );
+        if ($comment === '') { continue; }
+
+        // Avoid duplicate queue items for the exact same text & pair.
+        $exists = $DB->record_exists('spe_sentiment', [
+            'speid'   => $cm->instance,
+            'raterid' => $approveuserid,
+            'rateeid' => $r->rateeid,
+            'type'    => 'peer_comment',
+            'text'    => $comment
+        ]);
         if (!$exists) {
             $DB->insert_record('spe_sentiment', (object)[
-                'speid' => $cm->instance,
-                'raterid' => $approveuserid,
-                'rateeid' => $r->rateeid,
-                'type' => 'peer_comment',
-                'text' => $comment,
-                'status' => 'pending',
+                'speid'       => $cm->instance,
+                'raterid'     => $approveuserid,
+                'rateeid'     => $r->rateeid,
+                'type'        => 'peer_comment',
+                'text'        => $comment,
+                'status'      => 'pending',
                 'timecreated' => time()
             ]);
         }
@@ -95,9 +125,8 @@ $students = $DB->get_records_sql("
       FROM {user} u
       JOIN {spe_submission} s ON s.userid = u.id
      WHERE s.speid = :speid
-  ORDER BY u.lastname, u.firstname",
-    ['speid' => $cm->instance]
-);
+  ORDER BY u.lastname, u.firstname
+", ['speid' => $cm->instance]);
 
 if ($students) {
     echo html_writer::start_tag('table', ['class' => 'generaltable']);
@@ -120,7 +149,7 @@ if ($students) {
         $btn = html_writer::link($approveurl, 'Approve & Queue', ['class' => 'btn btn-secondary']);
 
         echo html_writer::tag('tr',
-            html_writer::tag('td', fullname($u) . " ({$u->username})") .
+            html_writer::tag('td', $mkname($u->firstname, $u->lastname) . " (" . s($u->username) . ")") .
             html_writer::tag('td', userdate($u->timemodified ?: $u->timecreated)) .
             html_writer::tag('td', (string)$queued) .
             html_writer::tag('td', $btn)
@@ -134,6 +163,7 @@ if ($students) {
 // ============================================================================
 //  2. Instructor Results & Export
 // ============================================================================
+
 echo html_writer::tag('h3', '2. Analysis Results & Exports');
 
 // Capability check
@@ -150,16 +180,21 @@ echo html_writer::end_div();
 
 // ---------------------------------------------------------------------------
 // Fetch all data (grouped by Moodle group)
+//  - Join user tables once (avoid per-row lookups in exports/render)
 // ---------------------------------------------------------------------------
 $ratings = $DB->get_records_sql("
-    SELECT r.*, s.label AS sentiment_label, s.sentiment AS sentiment_value
+    SELECT r.id, r.speid, r.raterid, r.rateeid, r.criterion, r.score, r.comment, r.timecreated,
+           s.label AS sentiment_label, s.sentiment AS sentiment_value,
+           ur.firstname AS rater_first, ur.lastname AS rater_last,
+           ue.firstname AS ratee_first, ue.lastname AS ratee_last
       FROM {spe_rating} r
  LEFT JOIN {spe_sentiment} s
         ON s.speid = r.speid AND s.raterid = r.raterid AND s.rateeid = r.rateeid
+ LEFT JOIN {user} ur ON ur.id = r.raterid
+ LEFT JOIN {user} ue ON ue.id = r.rateeid
      WHERE r.speid = :speid
-  ORDER BY r.raterid, r.rateeid, r.criterion",
-    ['speid' => $cm->instance]
-);
+  ORDER BY r.raterid, r.rateeid, r.criterion
+", ['speid' => $cm->instance]);
 
 if (!$ratings) {
     echo $OUTPUT->notification('No evaluations found yet.', 'notifyinfo');
@@ -196,8 +231,8 @@ if ($export === 'csv' && confirm_sesskey()) {
     fputcsv($out, ['Group', 'Rater', 'Ratee', 'Criterion', 'Score', 'Comment', 'Sentiment Label', 'Confidence']);
     foreach ($grouped as $gname => $rows) {
         foreach ($rows as $r) {
-            $rater = fullname($DB->get_record('user', ['id' => $r->raterid]));
-            $ratee = fullname($DB->get_record('user', ['id' => $r->rateeid]));
+            $rater = $mkname($r->rater_first ?? '', $r->rater_last ?? '');
+            $ratee = $mkname($r->ratee_first ?? '', $r->ratee_last ?? '');
             $conf  = sprintf('%.3f', ($r->sentiment_value !== null) ? ($r->sentiment_value + 1) / 2 : 0.5);
             fputcsv($out, [$gname, $rater, $ratee, $r->criterion, $r->score, $r->comment, $r->sentiment_label, $conf]);
         }
@@ -223,10 +258,13 @@ if ($export === 'pdf' && confirm_sesskey()) {
         $pdf->Cell(0, 8, "Group: $gname", 0, 1);
         $pdf->SetFont('', '', 10);
         foreach ($rows as $r) {
-            $rater = fullname($DB->get_record('user', ['id' => $r->raterid]));
-            $ratee = fullname($DB->get_record('user', ['id' => $r->rateeid]));
+            $rater = $mkname($r->rater_first ?? '', $r->rater_last ?? '');
+            $ratee = $mkname($r->ratee_first ?? '', $r->ratee_last ?? '');
             $conf  = sprintf('%.2f', ($r->sentiment_value !== null) ? ($r->sentiment_value + 1) / 2 : 0.5);
-            $pdf->MultiCell(0, 6, "Rater: $rater → Ratee: $ratee | Criterion: {$r->criterion} | Score: {$r->score} | Confidence: $conf\nComment: {$r->comment}\nSentiment: {$r->sentiment_label}", 0, 1);
+            $line  = "Rater: $rater → Ratee: $ratee | Criterion: {$r->criterion} | Score: {$r->score} | Confidence: $conf\n";
+            $line .= "Comment: {$r->comment}\n";
+            $line .= "Sentiment: " . ($r->sentiment_label ?? '-') . "\n";
+            $pdf->MultiCell(0, 6, $line, 0, 1);
             $pdf->Ln(2);
         }
         $pdf->Ln(4);
@@ -253,8 +291,8 @@ foreach ($grouped as $gname => $rows) {
     );
 
     foreach ($rows as $r) {
-        $rater = fullname($DB->get_record('user', ['id' => $r->raterid]));
-        $ratee = fullname($DB->get_record('user', ['id' => $r->rateeid]));
+        $rater = $mkname($r->rater_first ?? '', $r->rater_last ?? '');
+        $ratee = $mkname($r->ratee_first ?? '', $r->ratee_last ?? '');
         $conf  = sprintf('%.3f', ($r->sentiment_value !== null) ? ($r->sentiment_value + 1) / 2 : 0.5);
 
         echo html_writer::tag('tr',

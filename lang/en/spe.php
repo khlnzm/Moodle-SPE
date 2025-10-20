@@ -17,6 +17,21 @@ $string['spe:submit'] = 'Submit self & peer evaluations';
 $string['spe:viewreports'] = 'View SPE reports';
 $string['spe:manage']      = 'Manage SPE settings';
 
+$string['pluginname'] = 'Self & Peer Evaluation (SPE)';
+$string['modulename'] = 'Self & Peer Evaluation';
+$string['modulenameplural'] = 'Self & Peer Evaluations';
+$string['pluginadministration'] = 'SPE administration';
+
 $string['sentiment_url'] = 'Sentiment API URL';
 $string['sentiment_token'] = 'Sentiment API token';
+$string['analysisreport'] = 'Sentiment Analysis Report';
+$string['analysisreportdesc']   = 'See labels, scores, and excerpts for all queued reflections and peer comments.';
+$string['instructordashboard']  = 'Instructor Dashboard';
+$string['sentimentanalysis']    = 'Sentiment analysis';
+$string['runanalysisnow']       = 'Run analysis now';
+$string['runanalysisdesc']      = 'Push all pending texts to the sentiment API and update results.';
+$string['uploadcsv']            = 'Upload team CSV';
+$string['uploadcsvdesc']        = 'Import team mappings or rosters for this activity.';
+$string['backtoactivity']       = 'Back to activity';
+
 
