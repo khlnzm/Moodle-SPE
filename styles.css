@@ -1,0 +1,62 @@
+/* Compact layout for SPE pages */
+body.spe-compact .page-header-headings,
+body.spe-compact .activity-header,
+body.spe-compact .activity-description {
+  margin-bottom: .25rem !important;
+}
+
+body.spe-compact h1,
+body.spe-compact h2,
+body.spe-compact h3 {
+  margin-top: .25rem !important;
+  margin-bottom: .5rem !important;
+}
+
+/* Tables & boxes */
+body.spe-compact .generaltable {
+  margin-top: .5rem !important;
+  margin-bottom: .75rem !important;
+}
+
+body.spe-compact .generalbox,
+body.spe-compact .box,
+body.spe-compact .card {
+  margin-top: .5rem !important;
+  margin-bottom: .5rem !important;
+  padding-top: .5rem !important;
+  padding-bottom: .5rem !important;
+}
+
+/* Reduce extra whitespace produced by empty paragraphs in content */
+body.spe-compact p:empty {
+  display: none !important;
+}
+
+/* Optional: tighten section headings inside the activity content area */
+body.spe-compact .region-main .sectionname,
+body.spe-compact .region-main .lead {
+  margin-bottom: .5rem !important;
+}
+
+
+/* Left-align the activity header area on SPE pages, regardless of theme */
+body.spe-left #page-header .page-context-header {
+  justify-content: flex-start !important;  /* if theme uses flex & centers */
+  text-align: left !important;
+}
+
+/* Some themes add .text-center; override only on SPE pages */
+body.spe-left #page-header .text-center {
+  text-align: left !important;
+}
+
+/* Make the title block itself left-aligned */
+body.spe-left #page-header .page-header-headings {
+  text-align: left !important;
+  margin-left: 0 !important;
+}
+
+/* Nudge the icon + tighten spacing */
+body.spe-left #page-header .page-header-image {
+  margin-right: .5rem !important;
+}
