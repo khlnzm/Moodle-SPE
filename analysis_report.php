@@ -18,6 +18,13 @@ $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 echo $OUTPUT->heading('SPE Analysis Report');
 
+// Simple chip style for the disparity indicator.
+echo html_writer::tag('style', '
+.spe-chip { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; line-height:1.4; }
+.spe-chip.disparity { background:#fff3cd; color:#856404; border:1px solid #ffeeba; }
+.spe-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; font-size:12px; color:#555; }
+');
+
 // Helper to build a display name without triggering fullname() developer notices.
 $mkname = function(string $first = '', string $last = ''): string {
     return format_string(trim($first . ' ' . $last));
@@ -26,8 +33,29 @@ $mkname = function(string $first = '', string $last = ''): string {
 $mgr    = $DB->get_manager();
 $params = ['speid' => $cm->instance];
 
+/**
+ * Load disparities keyed by "raterid->rateeid".
+ * Schema expected (already added via install/upgrade):
+ *   spe_disparity(speid, raterid, rateeid, label, scoretotal, timecreated)
+ */
+$disparities = [];
+if ($mgr->table_exists('spe_disparity')) {
+    $sqldisp = "SELECT d.raterid, d.rateeid, d.label, d.scoretotal, d.timecreated
+                  FROM {spe_disparity} d
+                 WHERE d.speid = :speid";
+    $drows = $DB->get_records_sql($sqldisp, $params);
+    foreach ($drows as $d) {
+        $key = $d->raterid . '->' . $d->rateeid;
+        $disparities[$key] = [
+            'label'      => (string)($d->label ?? ''),
+            'scoretotal' => (int)($d->scoretotal ?? 0),
+            'time'       => (int)$d->timecreated
+        ];
+    }
+}
+
 /* ==========================================================
- * 1) Scores & Peer Comments
+ * 1) Scores & Peer Comments  (+ Disparity column)
  * ========================================================== */
 echo html_writer::tag('h3', 'Scores & Comments');
 
@@ -61,28 +89,44 @@ if (!$mgr->table_exists('spe_rating')) {
                     'comment' => $r->comment, // last seen; updated below if non-empty
                 ];
             }
-            // ✅ fixed index bug
             $byPair[$key]['scores'][$r->criterion] = (int)$r->score;
-
             if (!empty($r->comment)) {
                 $byPair[$key]['comment'] = $r->comment;
             }
         }
 
         $table = new html_table();
-        $table->head = ['Rater', 'Ratee', 'Avg Score', 'Comment (excerpt)'];
+        $table->head = ['Rater', 'Ratee', 'Avg Score', 'Comment (excerpt)', 'Disparity'];
 
-        foreach ($byPair as $pair) {
+        foreach ($byPair as $key => $pair) {
             $avg = !empty($pair['scores'])
                 ? (array_sum($pair['scores']) / count($pair['scores']))
                 : 0.0;
 
             $excerpt = s(core_text::substr($pair['comment'] ?? '', 0, 140));
+
+            // Build disparity cell (yellow chip if exists)
+            $disphtml = '-';
+            if (isset($disparities[$key])) {
+                $d = $disparities[$key];
+                $label = s($d['label'] ?: 'flag');
+                $total = (int)$d['scoretotal'];
+                $when  = $d['time'] ? userdate($d['time']) : '';
+                $meta  = $when ? " <span class='spe-mono'>@ {$when}</span>" : '';
+                $detail = $total ? " (total={$total})" : '';
+                $disphtml = html_writer::tag(
+                    'span',
+                    "Disparity: {$label}{$detail}{$meta}",
+                    ['class' => 'spe-chip disparity']
+                );
+            }
+
             $table->data[] = [
                 s($pair['rater']),
                 s($pair['ratee']),
                 format_float($avg, 2),
-                $excerpt
+                $excerpt,
+                $disphtml
             ];
         }
 

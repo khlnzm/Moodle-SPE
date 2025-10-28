@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/spe/db" VERSION="2025092800" COMMENT="SPE tables"
+<XMLDB PATH="mod/spe/db" VERSION="2025092801" COMMENT="SPE tables"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
   <TABLES>
 
+    <!-- Queue + results for sentiment analysis -->
     <TABLE NAME="spe_sentiment" COMMENT="Queue + results for sentiment analysis">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -12,9 +13,8 @@
         <FIELD NAME="rateeid" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="type" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- peer_comment|reflection -->
         <FIELD NAME="text" TYPE="text" NOTNULL="true"/>
-        <!-- FIX: split 10,4 into LENGTH + DECIMALS -->
-        <FIELD NAME="sentiment" TYPE="number" LENGTH="10" DECIMALS="4" NOTNULL="false"/> <!-- -1..1 or 0..1 -->
-        <FIELD NAME="label" TYPE="char" LENGTH="20" NOTNULL="false"/> <!-- negative|neutral|positive -->
+        <FIELD NAME="sentiment" TYPE="number" LENGTH="10" DECIMALS="4" NOTNULL="false"/> <!-- -1..1 -->
+        <FIELD NAME="label" TYPE="char" LENGTH="20" NOTNULL="false"/> <!-- negative|neutral|positive|toxic -->
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true"/> <!-- pending|done|error -->
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false"/>
@@ -22,9 +22,31 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+      <INDEXES>
+        <INDEX NAME="by_spe_rater_ratee" UNIQUE="false" FIELDS="speid,raterid,rateeid"/>
+      </INDEXES>
     </TABLE>
 
-    <!-- Existing main activity table (keep yours as-is) -->
+    <!-- Rater-ratee disparity decisions at submission time -->
+    <TABLE NAME="spe_disparity" COMMENT="Rater-ratee disparity decisions at submission time">
+      <FIELDS>
+        <FIELD NAME="id"          TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="speid"       TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="raterid"     TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="rateeid"     TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="label"       TYPE="char" LENGTH="10" NOTNULL="false" DEFAULT=""/> <!-- positive/neutral/negative/toxic -->
+        <FIELD NAME="scoretotal"  TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="spe_rater_ratee_ix" UNIQUE="true" FIELDS="speid,raterid,rateeid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- SPE activity instances -->
     <TABLE NAME="spe" COMMENT="SPE activity instances">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -41,7 +63,7 @@
       </KEYS>
     </TABLE>
 
-    <!-- NEW: team mapping per activity instance -->
+    <!-- Team mapping per SPE instance -->
     <TABLE NAME="spe_teammap" COMMENT="Maps students to teams for an SPE instance">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -63,7 +85,7 @@
       </INDEXES>
     </TABLE>
 
-    <!-- Store one submission per student per SPE (with reflection) -->
+    <!-- One submission per student per SPE -->
     <TABLE NAME="spe_submission" COMMENT="One submission per student per SPE">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
@@ -85,7 +107,7 @@
       </INDEXES>
     </TABLE>
 
-    <!-- Store every (rater -> ratee) score/comment per criterion -->
+    <!-- Scores and peer comments per criterion -->
     <TABLE NAME="spe_rating" COMMENT="Scores and peer comments per criterion">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

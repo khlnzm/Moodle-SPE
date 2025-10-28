@@ -1,0 +1,28 @@
+﻿C:\Users\User\Desktop\Moodle\server\moodle\mod\spe\api\.venv\Scripts\python.exe : INFO:     Started server process 
+[26640]
+At line:1 char:1
++ C:\Users\User\Desktop\Moodle\server\moodle\mod\spe\api\.venv\Scripts\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO:     Started server process [26640]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000): only one usage of each socket 
+address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+C:\Users\User\Desktop\Moodle\server\moodle\mod\spe\api\.venv\Scripts\python.exe : INFO:     Started server process 
+[25432]
+At line:1 char:1
++ C:\Users\User\Desktop\Moodle\server\moodle\mod\spe\api\.venv\Scripts\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (INFO:     Started server process [25432]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000): only one usage of each socket 
+address (protocol/network address/port) is normally permitted
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.

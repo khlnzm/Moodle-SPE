@@ -56,10 +56,41 @@ if (class_exists('\core\session\manager')) { \core\session\manager::write_close(
 while (ob_get_level()) { ob_end_clean(); }
 ignore_user_abort(true);
 
-// Fetch data
-$rows = $DB->get_records_select('spe_sentiment', "speid = :speid AND status = 'done'", ['speid' => $cm->instance]);
+$speid = (int)$cm->instance;
 
-// Stream CSV
+/* --- Fetch NLP rows (completed) --- */
+$rows = $DB->get_records_select(
+    'spe_sentiment',
+    "speid = :speid AND status = 'done'",
+    ['speid' => $speid]
+);
+
+/* --- Preload disparity flags keyed by "raterid->rateeid" --- */
+$disparitymap = [];
+$mgr = $DB->get_manager();
+if ($mgr->table_exists('spe_disparity')) {
+    $drows = $DB->get_records('spe_disparity', ['speid' => $speid], '', 'raterid, rateeid');
+    foreach ($drows as $d) {
+        $disparitymap[$d->raterid . '->' . $d->rateeid] = true;
+    }
+}
+
+/* --- Preload users (rater + ratee) --- */
+$usercache = [];
+$needids = [];
+foreach ($rows as $r) {
+    $needids[$r->raterid] = true;
+    $needids[$r->rateeid] = true;
+}
+if (!empty($needids)) {
+    list($insql, $inparams) = $DB->get_in_or_equal(array_keys($needids), SQL_PARAMS_NAMED);
+    $users = $DB->get_records_select('user', "id $insql", $inparams, '', 'id, firstname, lastname');
+    foreach ($users as $u) {
+        $usercache[$u->id] = $u;
+    }
+}
+
+/* --- Stream CSV --- */
 $filename = 'spe_results.csv';
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="'.$filename.'"');
@@ -67,16 +98,27 @@ header('Cache-Control: private, must-revalidate');
 header('Pragma: public');
 
 $out = fopen('php://output', 'w');
-fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM (Excel)
-fputcsv($out, ['Rater','Target','Type','Label','Score','Excerpt']);
+fputs($out, "\xEF\xBB\xBF"); // UTF-8 BOM (Excel-compatible)
+
+/* Header now includes Disparity column */
+fputcsv($out, ['Rater','Target','Type','Label','Score','Excerpt','Disparity']);
 
 foreach ($rows as $r) {
-    $rater   = $DB->get_record('user', ['id' => $r->raterid], 'firstname,lastname');
-    $ratee   = $DB->get_record('user', ['id' => $r->rateeid], 'firstname,lastname');
-    $rname   = $rater ? fullname($rater) : (string)$r->raterid;
-    $tname   = $ratee ? fullname($ratee) : (string)$r->rateeid;
-    $excerpt = core_text::substr(clean_text((string)$r->text), 0, 120) .
-               (core_text::strlen((string)$r->text) > 120 ? '…' : '');
+    // Names
+    $rater = $usercache[$r->raterid] ?? null;
+    $ratee = $usercache[$r->rateeid] ?? null;
+
+    $rname = $rater ? fullname($rater) : (string)$r->raterid;
+    $tname = $ratee ? fullname($ratee) : (string)$r->rateeid;
+
+    // Excerpt
+    $rawtext = (string)$r->text;
+    $excerpt = core_text::substr(clean_text($rawtext), 0, 120) .
+               (core_text::strlen($rawtext) > 120 ? '…' : '');
+
+    // Disparity flag
+    $key  = $r->raterid . '->' . $r->rateeid;
+    $disp = isset($disparitymap[$key]) ? 'Yes' : '';
 
     fputcsv($out, [
         $rname,
@@ -84,8 +126,10 @@ foreach ($rows as $r) {
         (string)$r->type,
         (string)$r->label,
         is_null($r->sentiment) ? '' : sprintf('%.3f', (float)$r->sentiment),
-        $excerpt
+        $excerpt,
+        $disp
     ]);
 }
+
 fclose($out);
 exit;
